@@ -1,4 +1,5 @@
-Flavorful Bites – Recipe Sharing Platform
+Flavorful Bites 
+
 Flavorful Bites is a full-stack recipe-sharing web application where users can discover, share, and manage delicious recipes from around the world. The platform provides personalized recipe recommendations, user authentication, and a responsive UI for a seamless experience across devices.
 
 📌 Features
