@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup - RecipeBook</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            text-align: center;
+        }
+        header {
+            background: #ff6600;
+            color: white;
+            padding: 20px 0;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin: 0 15px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+        nav ul li a:hover {
+            color: #ffcc80;
+        }
+        .signup {
+            padding: 50px 0;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            display: inline-block;
+            background: #ff6600;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #e65c00;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+        }
+        .success-message {
+            display: none;
+            color: green;
+            font-size: 16px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Flavorful Bites</h1>
+            <nav>
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="recipes.html">Recipes</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="signup">
+        <div class="container">
+            <h2>Signup</h2>
+            <form id="signupForm">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" required>
+                <span class="error" id="firstNameError"></span>
+
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" required>
+                <span class="error" id="lastNameError"></span>
+
+                <label for="mobileno">Mobile No:</label>
+                <input type="text" id="mobileno" name="mobileno" required>
+                <span class="error" id="mobileError"></span>
+
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <span class="error" id="emailError"></span>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <span class="error" id="passwordError"></span>
+
+                <label for="taste">Favorite Taste/Ingredient:</label>
+                <input type="text" id="taste" name="taste" placeholder="e.g., chocolate, pasta, spicy" required>
+                <span class="error" id="tasteError"></span>
+
+                <button type="submit" class="btn">Sign Up</button>
+            </form>
+            <p class="success-message" id="successMessage">Signup successful! ✅ Redirecting...</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 RecipeBook. All rights reserved.</p>
+        </div>
+    </footer>
+    <script>
+        document.getElementById("signupForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const firstName = document.getElementById("firstName").value.trim();
+            const lastName = document.getElementById("lastName").value.trim();
+            const mobileno = document.getElementById("mobileno").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const taste = document.getElementById("taste").value.trim();
+            const successMessage = document.getElementById("successMessage");
+
+            let valid = true;
+            document.querySelectorAll(".error").forEach(error => error.textContent = "");
+
+            if (!firstName) document.getElementById("firstNameError").textContent = "First Name is required", valid = false;
+            if (!lastName) document.getElementById("lastNameError").textContent = "Last Name is required", valid = false;
+            if (!/^[0-9]{10}$/.test(mobileno)) document.getElementById("mobileError").textContent = "Enter a valid 10-digit mobile number", valid = false;
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) document.getElementById("emailError").textContent = "Enter a valid email address", valid = false;
+            if (!/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(password)) document.getElementById("passwordError").textContent = "Password must be 6+ chars, 1 uppercase, 1 number", valid = false;
+            if (!taste) document.getElementById("tasteError").textContent = "Please enter your taste preference", valid = false;
+
+            if (valid) {
+                fetch("/api/auth/signup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ firstName, lastName, mobileno, email, password, taste })
+                })
+                .then(async (res) => {
+                    const data = await res.json();
+                    if (res.ok) {
+                        document.cookie = `userEmail=${email}; path=/;`;
+                        document.cookie = `favTag=${taste}; path=/;`;
+                        successMessage.style.display = "block";
+                        setTimeout(() => {
+                            window.location.href = "login.html";
+                        }, 2000);
+                    } else {
+                        alert(data.message || "Signup failed");
+                    }
+                })
+                .catch(error => {
+                    console.error("Signup error:", error);
+                    alert("Server not reachable. Make sure your backend is running.");
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Recipe - RecipeBook</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #fdfbfb, #ebedee);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 18px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease;
+    }
+    .container:hover {
+      transform: scale(1.01);
+    }
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: 16px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #ff5e3a;
+      margin-bottom: 10px;
+      font-size: 2.2rem;
+    }
+    p {
+      font-size: 1.1rem;
+      color: #555;
+      line-height: 1.6;
+    }
+    h2 {
+      margin-top: 35px;
+      color: #333;
+      border-left: 5px solid #ff5e3a;
+      padding-left: 12px;
+      font-size: 1.5rem;
+    }
+    ul, ol {
+      padding-left: 25px;
+      font-size: 1.05rem;
+      color: #444;
+    }
+    ul li, ol li {
+      margin-bottom: 8px;
+    }
+    a.back-link {
+      display: inline-block;
+      margin-top: 30px;
+      text-decoration: none;
+      color: #fff;
+      background: #ff5e3a;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    a.back-link:hover {
+      background: #d94b2a;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .recommendations {
+      margin-top: 50px;
+    }
+
+    .recommendations h2 {
+      margin-top: 50px;
+    }
+
+    .recommend-card {
+      background: #f7f7f7;
+      padding: 20px;
+      margin: 10px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .recommend-card img {
+      max-width: 150px;
+      float: left;
+      margin-right: 15px;
+      border-radius: 8px;
+    }
+
+    .recommend-card h3 {
+      margin: 0 0 10px;
+      color: #333;
+    }
+
+    .recommend-card::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px 15px;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+      h2 {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="recipe-container">
+    <h1 id="recipe-title">Loading...</h1>
+    <img id="recipe-image" src="" alt="">
+    <p id="recipe-description"></p>
+
+    <h2>Ingredients</h2>
+    <ul id="ingredients-list"></ul>
+
+    <h2>Instructions</h2>
+    <ol id="steps-list"></ol>
+
+    <div class="recommendations" id="recommendations-section"></div>
+
+    <a href="recipes.html" class="back-link">← Back to Recipes</a>
+  </div>
+
+  <script>
+    async function getRecipeIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("id");
+    }
+
+    async function loadRecipe(id) {
+      try {
+        const res = await fetch(`/api/recipes/${id}`);
+        if (!res.ok) throw new Error("Not found in DB");
+        const recipe = await res.json();
+        renderRecipe(recipe);
+        loadRecommendations(id);
+      } catch (error) {
+        console.warn("Error fetching recipe:", error.message);
+        document.getElementById("recipe-container").innerHTML = `
+          <div style="padding: 40px; text-align: center;">
+            <h2 style="color: #ff5e3a;">Recipe not found.</h2>
+          </div>`;
+      }
+    }
+
+    function renderRecipe(recipe) {
+      document.getElementById("recipe-title").textContent = recipe.name;
+      document.getElementById("recipe-image").src = recipe.image;
+      document.getElementById("recipe-image").alt = recipe.name;
+      document.getElementById("recipe-description").textContent = recipe.description;
+
+      const ingredientsList = document.getElementById("ingredients-list");
+      ingredientsList.innerHTML = "";
+      (recipe.ingredients || []).forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        ingredientsList.appendChild(li);
+      });
+
+      const stepsList = document.getElementById("steps-list");
+      stepsList.innerHTML = "";
+      (recipe.steps || []).forEach(step => {
+        const li = document.createElement("li");
+        li.textContent = step;
+        stepsList.appendChild(li);
+      });
+    }
+
+    function loadRecommendations(id) {
+      fetch(`/api/recommendations/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          const section = document.getElementById("recommendations-section");
+          section.innerHTML = "<h2>You might also like:</h2>";
+          data.forEach(r => {
+            const card = document.createElement("div");
+            card.className = "recommend-card";
+            card.innerHTML = `
+              <img src="${r.image}" alt="${r.name}">
+              <h3>${r.name}</h3>
+              <p>${r.description}</p>
+              <a href="recipe.html?id=${r.id}">View Recipe →</a>`;
+            section.appendChild(card);
+          });
+        })
+        .catch(err => {
+          console.error("Failed to load recommendations:", err.message);
+        });
+    }
+
+    window.onload = async () => {
+      const recipeId = await getRecipeIdFromURL();
+      if (recipeId) loadRecipe(recipeId);
+      else document.getElementById("recipe-container").innerHTML = "<h2>Invalid recipe ID.</h2>";
+    };
+  </script>
+</body>
+</html>
